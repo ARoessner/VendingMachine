@@ -10,80 +10,141 @@ namespace VendingMachine
     {
         public static void Main(String[] args)
         {
+            string coinInput = "";
+            Console.WriteLine("Welcome to the Vending Machine!!!");
+            Console.WriteLine("This Machine only accepts Nickles, Dimes, and Quarters");
+            Console.WriteLine("To insert change just type out the name of the coin you wish to enter");
+            VendingMachine vm = new VendingMachine();
+            do
+            {
+                Console.WriteLine("Type \"vend\" to begin vending process or \"exit\" to leave");
+                Console.WriteLine(vm.CheckDisplay());
+                coinInput = Console.ReadLine();
+                if(coinInput.ToLower() == "vend")
+                {
+                    Console.WriteLine("Please enter a number 0 - " + (vm.products.Length-1));
+                    int prodID = Int32.Parse(Console.ReadLine());
+                    Console.WriteLine(vm.Dispense(prodID));
+                }
+                else
+                {
+                    Console.WriteLine(vm.InsertCoin(coinInput));
+                }
+
+            } while (coinInput != "exit");
         }
     }
     class VendingMachine
     {
         //Product Names
-        string[] products;
+        public string[] products;
         //Product Amounts
         int[] numProducts;
         //Price Products
-        double[] price;
+        decimal[] price;
         //Current Balance
-        double changeInserted = 0;
+        decimal changeInserted = 0;
         // V CHANGE variables V
         int numQuarters = 0;//number of Quarters
         int numNickels = 0; //number of Nickles
         int numDimes = 0;   //number of Dimes
+        // String to be displayed on vending machine
+        string onDisplay = "";
 
         //Default Constructor
         public VendingMachine()
         {
             this.products = new string[] {"cola","chips","candy" }; //Initialize Product Names
             this.numProducts = new int[] { 3, 3, 3 };               //Initialize Product Quantities
-            this.price = new double[] { 1, .5, .65 };               //Initialize Product Prices
+            this.price = new decimal[] { 1m, .5m, .65m };               //Initialize Product Prices
         }
 
         //Constructor
-        public VendingMachine(string[] products,int[] numProducts, double[] price)
+        public VendingMachine(string[] products,int[] numProducts, decimal[] price)
         {
             this.products = products;       //Initialize Product Names
             this.numProducts = numProducts; //Initialize Product Quantities
             this.price = price;             //Initialize Product Prices
+        }
+
+        //Check Display Method
+        public string CheckDisplay()
+        {
+            if ((onDisplay == "INSERT COIN") || (onDisplay == "EXACT CHANGE ONLY"))//Alternate Display
+                onDisplay = changeInserted.ToString("C");
+            else if (HasChange())//Display when Vending Machine can make change
+                onDisplay = "INSERT COIN";
+            else//Display when Vending Machine cannot make change
+                onDisplay = "EXACT CHANGE ONLY";
+            return onDisplay;//return onDisplay
         }
         //Insert Coins Method
         public string InsertCoin(string coin)
         {
             if ((coin == "nickel") || (coin == "Nickel"))//Nickel
             {
-                changeInserted += .05;  //Increment changeInserted
+                changeInserted += .05m;  //Increment changeInserted
                 numNickels++;           //Increment numNickles
             }
             else if ((coin == "dime") || (coin == "Dime"))//Dime
             {
-                changeInserted += .10;  //Increment changeInserted
+                changeInserted += .10m;  //Increment changeInserted
                 numDimes++;             //Increment numDimes
             }
             else if ((coin == "quarter") || (coin == "Quarter"))//Quarter
             {
-                changeInserted += .25;  //Increment changeInserted
+                changeInserted += .25m;  //Increment changeInserted
                 numQuarters++;          //Increment numQuarters
             }
-            return changeInserted.ToString("C");//return changeInserted formatted as Currency
+            onDisplay = changeInserted.ToString("C");//set onDisplay to changeInserted formatted as Currency
+            return onDisplay; //return onDisplay
         }
 
         //Dispense Method
         public string Dispense(int product)
         {
-            if(numProducts[product]>0)//Product is in stock
+            if ((product < products.Length) && (product >= 0))//product number is valid
             {
-                if (changeInserted >= price[product])//inserted enough change
+                if (numProducts[product] > 0)//Product is in stock
                 {
-                    numProducts[product]--;//decrease product quantity
-                    //DispenseChange(changeInserted - price[product]);//dispense proper change
-                    changeInserted = 0;//reset change inserted
-                    return "Thank You!!!";//Send Thank You!!! Message
+                    if (changeInserted >= price[product])//inserted more than enough change
+                    {
+                        if (changeInserted == price[product])
+                        {
+                            numProducts[product]--;//decrease product quantity
+                            onDisplay = "Thank You!!!";//Send Thank You!!! Message
+                        }
+                        else
+                        {
+                            if (HasChange())
+                            {
+                                numProducts[product]--;//decrease product quantity
+                                Console.WriteLine(DispenseChange(changeInserted - price[product]));//dispense proper change
+                                onDisplay = "Thank You!!!";//Send Thank You!!! Message
+                            }
+                            else
+                            {
+                                Console.WriteLine(DispenseChange(changeInserted));//dispense input change
+                                onDisplay = "EXACT CHANGE ONLY";//send EXACT CHANGE message
+                            }
+                        }
+                        changeInserted = 0;//reset change inserted
+                    }
+                    else//not enough change inserted
+                    {
+                        onDisplay = "PRICE: " + price[product].ToString("C");//Send Product Price Message
+                    }
                 }
-                else//not enough change inserted
+                else//Product out of stock
                 {
-                    return "PRICE: " + price[product].ToString("C");//Send Product Price Message
+                    onDisplay = "SOLD OUT";//Send SOLD OUT message
                 }
             }
-            else//Product out of stock
+            else//Invalid Input
             {
-                return "SOLD OUT";//Send SOLD OUT message
+                onDisplay = "INVALID PRODUCT NUMBER";//Send INVALID PRODUCT message
             }
+            return onDisplay;//return onDisplay
         }
 
         //HasChange Method
@@ -108,7 +169,7 @@ namespace VendingMachine
             int numQuarters = 0;//numQuarters to be dispensed
             int numNickels = 0; //numNickles to be dispensed
             int numDimes = 0;   //numDimes to be dispensed
-            string value = "";  //Output string
+            StringBuilder value = new StringBuilder("");  //Output string
             if (change > 0) //Vending Machine owes change
             {
                 while (change > 0) //while change owed > 0
@@ -135,26 +196,26 @@ namespace VendingMachine
                 //Begin Building Output string
                 if (numQuarters != 0)//There are Quarters to be dispensed
                 {
-                    value += numQuarters + " Quarters";//Add Quarters to output string
+                    value.Append(numQuarters + " Quarters");//Add Quarters to output string
                 }
                 if (numDimes != 0)//There are Dimes to be dispensed
                 {
-                    if (value != "")//Quarters were added
+                    if (value.ToString() !="" )//Quarters were added
                     {
-                        value += ", ";//Add comma between quarters and dimes
+                        value.Append(", ");//Add comma between quarters and dimes
                     }
-                    value += numDimes + " Dimes";//Add Dimes to output string
+                    value.Append(numDimes + " Dimes");//Add Dimes to output string
                 }
                 if (numNickels != 0)//There are Nickels to be dispensed
                 {
-                    if (value != "")//Quarters and/or Dimes were added
+                    if (value.ToString() != "")//Quarters and/or Dimes were added
                     {
-                        value += " and ";//add "and" between quarters/dimes and nickles
+                        value.Append(" and ");//add "and" between quarters/dimes and nickles
                     }
-                    value += numNickels + " Nickels";//Add Nickles to output string
+                    value.Append(numNickels + " Nickels");//Add Nickles to output string
                 }
-                value += " were dispensed";//finished building output string
-                return value;//return Output String
+                value.Append(" were dispensed");//finished building output string
+                return value.ToString();//return Output String
             }
             return "";//return empty string
         }

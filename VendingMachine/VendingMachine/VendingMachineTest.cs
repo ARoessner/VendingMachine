@@ -37,8 +37,6 @@ namespace VendingMachine
         }
         //TEST Dispense Method --Product is sold out
         [TestCase(0, "SOLD OUT")] //test dispense item 0
-        [TestCase(1, "SOLD OUT")] //test dispense item 1
-        [TestCase(2, "SOLD OUT")] //test dispense item 2
         public void NoProductsDispense(int p, string expected)
         {
             VendingMachine vm = new VendingMachine();//Stage Vending Machine
@@ -67,8 +65,6 @@ namespace VendingMachine
 
         //TEST Dispense --Product is there and enough money is inserted
         [TestCase(0, "Thank You!!!")] //test dispense item 0
-        [TestCase(1, "Thank You!!!")] //test dispense item 1
-        [TestCase(2, "Thank You!!!")] //test dispense item 2
         public void ValidDispense(int p, string expected)
         {
             VendingMachine vm = new VendingMachine();//Stage Vending Machine
